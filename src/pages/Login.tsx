@@ -7,17 +7,24 @@ import {
   Avatar,
   Typography,
   TextField,
-  Button
+  Button,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { AxiosError } from 'axios';
+import { useAuth } from "../utils/useAuth";
+import publicClient from "../utils/publicClient";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const navigate = useNavigate(); // for redirection after successful login
-  const { login } = useAuth(); 
+  const { login } = useAuth();
   const [errors, setErrors] = useState({
     email: "",
     password: ""
@@ -33,20 +40,43 @@ const Login = () => {
     return Object.values(newErrors).every((error) => error === "");
   };
 
-  const handleLogin = () => {
-      if (!validateForm()) return;
-      // Handle registration logic here
-      console.log("Login user:", {email, password });
-      login({
-        id: "",
-        username: "",
-        role: ""
-      })
+  const handleLogin = async () => {
+    if (!validateForm()) return;
+    // Handle registration logic here
+    try {
+
+      const data = { username: email, password }
+      const response = await publicClient.post('/api/auth/login', data)
+      const user = response.data
+      login(user)
       navigate("/")
+
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+
+        console.error(error);
+        if (error.response?.data?.message === 'Email already in use') {
+          setErrors(prevErrors => ({
+            ...prevErrors,
+            email: 'This email is already in use',
+          }));
+        }
+        setSnackbarMessage(error.response?.data?.message || 'Something went wrong. Please try again.');
+        setSnackbarSeverity('error');
+        setOpenSnackbar(true);
+
+        // Handle specific error (e.g., display a message to the user)
+      } else {
+        console.error('An unknown error occurred');
+      }
+      // Set Snackbar for error
+
+    }
+
   };
 
   return (
-    <Container sx={{width : '450px', }}>
+    <Container sx={{ width: '450px', }}>
       <CssBaseline />
       <Box
         sx={{
@@ -59,7 +89,7 @@ const Login = () => {
           borderRadius: '25px',
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: "primary.light"}} >
+        <Avatar sx={{ m: 1, bgcolor: "primary.light" }} >
           <LockOutlined />
         </Avatar>
         <Typography variant="h5">Login</Typography>
@@ -87,7 +117,7 @@ const Login = () => {
             label="Password"
             type="password"
             value={password}
-            onChange={(e) => {setPassword(e.target.value)}}
+            onChange={(e) => { setPassword(e.target.value) }}
             error={Boolean(errors.password)}
             helperText={errors.password}
           />
@@ -107,6 +137,23 @@ const Login = () => {
           </Grid>
         </Box>
       </Box>
+
+      {/* Snackbar for global notifications */}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={2000}
+        onClose={() => setOpenSnackbar(false)} // Using onClose to handle redirection
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setOpenSnackbar(false)}
+          severity={snackbarSeverity}
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+
     </Container>
   );
 };

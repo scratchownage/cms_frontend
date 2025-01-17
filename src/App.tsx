@@ -1,27 +1,41 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import { useState } from 'react';
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider } from './context/AuthProvider';
+import { useAuth } from './utils/useAuth';
+import PublicRoute from './routes/PublicRoute';
 
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
-
   return (
     <AuthProvider>
       <Router>
-          <Routes>
-            {/* Redirect to /login if not authenticated */}
-            <Route
-              path="/"
-              element={!isLoggedIn ? <Navigate to="/login" /> : <Navigate to="/" />}
-            />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Routes>
+        <AppRoutes />
       </Router>
     </AuthProvider>
+  );
+};
+
+// Separate component for routes
+const AppRoutes = () => {
+  const { user } = useAuth(); // Now this is safely within AuthProvider
+
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={user ? <Navigate to="/" /> : <Navigate to="/login" />}
+      />
+      <Route path="/login"
+        element={<PublicRoute>
+          <Login />
+        </PublicRoute>} />
+
+      <Route path="/register"
+        element={<PublicRoute>
+          <Register />
+        </PublicRoute>} />
+        
+    </Routes>
   );
 };
 
