@@ -9,7 +9,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
     const { user } = useAuth();
 
     if (user) {
-        return <Navigate to="/" replace />; // Redirect to homepage or dashboard
+        return <Navigate to="/textEditor" replace />; // Redirect to homepage or dashboard
     }
 
     return children;

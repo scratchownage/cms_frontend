@@ -4,6 +4,8 @@ import Register from './pages/Register';
 import { AuthProvider } from './context/AuthProvider';
 import { useAuth } from './utils/useAuth';
 import PublicRoute from './routes/PublicRoute';
+import ProtectedRoute from './routes/ProtectedRoute';
+import TextEditorPage from './pages/TextEditorPage';
 
 const App = () => {
   return (
@@ -23,7 +25,7 @@ const AppRoutes = () => {
     <Routes>
       <Route
         path="/"
-        element={user ? <Navigate to="/" /> : <Navigate to="/login" />}
+        element={user ? <Navigate to="/textEditor" /> : <Navigate to="/login" />}
       />
       <Route path="/login"
         element={<PublicRoute>
@@ -34,7 +36,13 @@ const AppRoutes = () => {
         element={<PublicRoute>
           <Register />
         </PublicRoute>} />
-        
+
+      <Route path="/textEditor"
+        element={<ProtectedRoute>
+          <TextEditorPage />
+        </ProtectedRoute>}
+      />
+
     </Routes>
   );
 };
